@@ -9,9 +9,9 @@ import Control.Applicative
 import Control.Monad
 import qualified Data.Foldable as Foldable
 import Data.Maybe (fromMaybe, isJust)
-import Test.Hspec
-import Test.Hspec.QuickCheck
 import Test.QuickCheck
+import Test.Tasty
+import Test.Tasty.QuickCheck
 
 instance (Arbitrary a, Arbitrary p, Ord p, Num p) => Arbitrary (LexTree p a) where
   arbitrary = sized goSized
@@ -45,46 +45,48 @@ instance (Arbitrary a, Arbitrary p, Ord p, Num p) => Arbitrary (LexTree p a) whe
         (\a' -> bin ls l a' ms r rs) <$> shrink a
       ]
 
-spec :: Spec
-spec =
-  describe "LexTree" $ do
-    prop "arbitrary trees are valid" $ check @Int @()
-    prop "inserting increases length by 1" $ \l a r (t :: LexTree Int Int) ->
-      case insert l a r t of
-        Left _ -> discard
-        Right t' -> length t + 1 == length t'
-    describe "inserting produces valid trees" $ do
-      prop "inserting produces trees with valid bounds" $ \l a r (t :: LexTree Int Int) ->
+spec :: TestTree
+spec = testGroup "LexTree"
+  [ testProperty "arbitrary trees are valid" $ check @Int @()
+  , testProperty "inserting increases length by 1" $
+      \l a r (t :: LexTree Int Int) ->
+        case insert l a r t of
+          Left _ -> discard
+          Right t' -> length t + 1 == length t'
+  , testGroup "inserting produces valid trees"
+    [ testProperty "inserting produces trees with valid bounds" $ \l a r (t :: LexTree Int Int) ->
         case insert l a r t of
           Left _ -> discard
           Right t' -> checkBounds t'
-      prop "inserting produces trees with valid height" $ \l a r (t :: LexTree Int Int) ->
+    , testProperty "inserting produces trees with valid height" $ \l a r (t :: LexTree Int Int) ->
         case insert l a r t of
           Left _ -> discard
           Right t' -> checkHeight t'
-      prop "inserting produces trees with valid balance" $ \l a r (t :: LexTree Int Int) ->
+    , testProperty "inserting produces trees with valid balance" $ \l a r (t :: LexTree Int Int) ->
         case insert l a r t of
           Left _ -> discard
           Right t' -> checkBalance t'
-    prop "after inserting, we can get the element back" $ \l a r (t :: LexTree Int Int) ->
+    ]
+  , testProperty "after inserting, we can get the element back" $ \l a r (t :: LexTree Int Int) ->
       case insert l a r t of
         Left _ -> discard
         Right t' -> elem a (lookupStack l t')
-    prop "inserting leaves other elements in the same order" $ \l p r (t :: LexTree Int Int) ->
+  , testProperty "inserting leaves other elements in the same order" $ \l p r (t :: LexTree Int Int) ->
       let f (a : as) (b : bs) | a == b = f as bs
           f (_ : as) bs = as == bs
           f _ _ = False
        in case insert l p r t of
             Left _ -> discard
             Right t' -> f (Foldable.toList t') (Foldable.toList t)
-    prop "listifying and back succeeds and is valid" $ \(t :: LexTree Int Int) ->
+  , testProperty "listifying and back succeeds and is valid" $ \(t :: LexTree Int Int) ->
       case foldM (\acc (l, a, r) -> insert l a r acc) Tip (toList t) of
         Left _ -> False
         Right t' -> check t'
-    prop "listifying and back succeeds and is the same tree" $ \(t :: LexTree Int Int) ->
+  , testProperty "listifying and back succeeds and is the same tree" $ \(t :: LexTree Int Int) ->
       case foldM (\acc (l, a, r) -> insert l a r acc) Tip (toList t) of
         Left _ -> False
         Right t' -> t == t'
+  ]
 
 checkBounds :: Ord p => LexTree p a -> Bool
 checkBounds t = isJust $ foldLexTreeM (pure Nothing) f t

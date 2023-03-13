@@ -82,12 +82,15 @@ test-suite calligraphy-test
   other-modules:
     Test.LexTree
     Test.Reference
+    Test.Mermaid
 
   build-depends:
     , calligraphy
     , containers
-    , hspec
-    , HUnit
+    , tasty
+    , tasty-golden
+    , tasty-hunit
+    , tasty-quickcheck
     , QuickCheck
 
   type:           exitcode-stdio-1.0
