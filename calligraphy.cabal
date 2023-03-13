@@ -29,6 +29,10 @@ source-repository head
 common common-options
   build-depends:    base >=4.9 && <5
   default-language: Haskell2010
+  default-extensions:
+    DerivingStrategies
+    OverloadedStrings
+    RecordWildCards
   ghc-options:
     -Wall -Wcompat -Widentities -Wincomplete-uni-patterns
     -Wincomplete-record-updates -Wredundant-constraints
@@ -41,6 +45,8 @@ library
   autogen-modules: Paths_calligraphy
   exposed-modules:
     Calligraphy
+    Calligraphy.Backend.GraphViz
+    Calligraphy.Backend.Mermaid
     Calligraphy.Compat.Debug
     Calligraphy.Compat.GHC
     Calligraphy.Compat.Lib
@@ -48,7 +54,6 @@ library
     Calligraphy.Phases.EdgeCleanup
     Calligraphy.Phases.NodeFilter
     Calligraphy.Phases.Parse
-    Calligraphy.Phases.Render
     Calligraphy.Phases.Search
     Calligraphy.Util.Lens
     Calligraphy.Util.LexTree

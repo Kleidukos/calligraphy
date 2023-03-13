@@ -1,8 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-
 -- | Rendering takes a callgraph, and produces a dot file
-module Calligraphy.Phases.Render (render, pRenderConfig, RenderConfig (..)) where
+module Calligraphy.Backend.GraphViz (render, pRenderConfig, GraphVizRenderConfig (..)) where
 
 import Calligraphy.Util.Printer
 import Calligraphy.Util.Types
@@ -13,7 +10,7 @@ import Data.Tree (Tree (..))
 import Options.Applicative hiding (style)
 import Text.Show (showListWith)
 
-data RenderConfig = RenderConfig
+data GraphVizRenderConfig = GraphVizRenderConfig
   { showCalls :: Bool,
     showTypes :: Bool,
     showKey :: Bool,
@@ -26,9 +23,10 @@ data RenderConfig = RenderConfig
     splines :: Bool,
     reverseDependencyRank :: Bool
   }
+  deriving stock (Eq, Show)
 
-render :: RenderConfig -> Prints CallGraph
-render RenderConfig {..} (CallGraph modules calls types) = do
+render :: GraphVizRenderConfig -> Prints CallGraph
+render GraphVizRenderConfig {..} (CallGraph modules calls types) = do
   brack "digraph calligraphy {" "}" $ do
     unless splines $ textLn "splines=false;"
     textLn "node [style=filled fillcolor=\"#ffffffcf\"];"
@@ -134,9 +132,9 @@ pLocMode =
     <|> flag' LineCol (long "show-line-col" <> help "Show line and column numbers")
     <|> pure Hide
 
-pRenderConfig :: Parser RenderConfig
+pRenderConfig :: Parser GraphVizRenderConfig
 pRenderConfig =
-  RenderConfig
+  GraphVizRenderConfig
     <$> flag True False (long "hide-calls" <> help "Don't show call arrows")
     <*> flag True False (long "hide-types" <> help "Don't show type arrows")
     <*> flag False True (long "show-key" <> help "Show internal keys with identifiers. Useful for debugging.")

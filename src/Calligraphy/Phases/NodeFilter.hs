@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 -- | This modules manages the two ways we remove nodes from a graph; collapsing and hiding.
 --
 -- Collapsing means absorbing a node's descendants into itself, including all edges.

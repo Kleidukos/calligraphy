@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints -Wno-unused-matches #-}
 
 module Calligraphy.Compat.Lib

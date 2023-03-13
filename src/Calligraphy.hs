@@ -1,6 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-
 module Calligraphy (main, mainWithConfig) where
 
 import Calligraphy.Compat.Debug (ppHieFile)
@@ -9,7 +6,8 @@ import Calligraphy.Phases.DependencyFilter
 import Calligraphy.Phases.EdgeCleanup
 import Calligraphy.Phases.NodeFilter
 import Calligraphy.Phases.Parse
-import Calligraphy.Phases.Render
+import qualified Calligraphy.Backend.GraphViz as GraphViz
+import Calligraphy.Backend.GraphViz (GraphVizRenderConfig(..))
 import Calligraphy.Phases.Search
 import Calligraphy.Util.Printer
 import Calligraphy.Util.Types (ppCallGraph)
@@ -24,6 +22,11 @@ import System.Directory (findExecutable)
 import System.Exit
 import System.IO (stderr)
 import System.Process
+
+data BackendConfiguration
+  = GraphViz GraphVizRenderConfig
+  | Mermaid ()
+  deriving stock (Eq, Show)
 
 main :: IO ()
 main = do
@@ -55,8 +58,8 @@ mainWithConfig AppConfig {..} = do
   let cgCleaned = cleanupEdges edgeFilterConfig cgDependencyFiltered
   debug dumpFinal $ ppCallGraph cgCleaned
 
-  let renderConfig' = renderConfig {clusterModules = clusterModules renderConfig && not (collapseModules nodeFilterConfig)}
-      txt = runPrinter $ render renderConfig' cgCleaned
+  let renderConfig' = renderConfig{ clusterModules = GraphViz.clusterModules renderConfig && not (collapseModules nodeFilterConfig)}
+      txt = runPrinter $ GraphViz.render renderConfig' cgCleaned
 
   output outputConfig txt
 
@@ -65,7 +68,7 @@ data AppConfig = AppConfig
     nodeFilterConfig :: NodeFilterConfig,
     dependencyFilterConfig :: DependencyFilterConfig,
     edgeFilterConfig :: EdgeCleanupConfig,
-    renderConfig :: RenderConfig,
+    renderConfig :: GraphVizRenderConfig,
     outputConfig :: OutputConfig,
     debugConfig :: DebugConfig
   }
@@ -82,7 +85,7 @@ pConfig =
     <*> pNodeFilterConfig
     <*> pDependencyFilterConfig
     <*> pEdgeCleanupConfig
-    <*> pRenderConfig
+    <*> GraphViz.pRenderConfig
     <*> pOutputConfig
     <*> pDebugConfig
 
